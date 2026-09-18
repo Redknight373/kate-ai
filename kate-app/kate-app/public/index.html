@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>kATE</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="kATE">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0A0A0B">
+<link rel="apple-touch-icon" sizes="180x180" href="/icon180.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon512.png">
+<link rel="icon" type="image/png" sizes="180x180" href="/icon180.png">
+<style>
+  :root{
+    --bg: #0A0A0B;
+    --bg-panel: #17171A;
+    --ink: #F2F1ED;
+    --ink-soft: #8B8A8E;
+    --red: #D6293B;
+    --blue: #3355E0;
+    --purple: #8B5CF6;
+    --white: #F2F1ED;
+    --bubble-user: #D6293B;
+    --bubble-user-ink: #F2F1ED;
+    --bubble-kate: #17171A;
+    --border: #232326;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+
+  header{
+    padding: max(14px, env(safe-area-inset-top)) 18px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom: 1px solid var(--border);
+    flex-shrink:0;
+    background: linear-gradient(180deg, #0D0D0F, #0A0A0B);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .mark{ width:32px; height:32px; border-radius:9px; display:block; object-fit:cover; flex-shrink:0; }
+  .brand h1{
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size:18px;
+    font-weight:700;
+    letter-spacing:0.02em;
+    margin:0;
+    background: linear-gradient(90deg, #4E8CFF, var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .brand .sub{
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size:10.5px;
+    color: var(--blue);
+    letter-spacing:0.03em;
+  }
+  .headerActions{ display:flex; align-items:center; gap:6px; }
+  .icon-btn{
+    font-family: -apple-system, sans-serif;
+    font-size:12.5px;
+    color: var(--ink-soft);
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius:8px;
+    cursor:pointer;
+    padding:6px 9px;
+  }
+  .icon-btn.active{ color: var(--white); border-color: var(--blue); background: rgba(51,85,224,0.18); }
+  .icon-btn.danger:active{ color: var(--red); border-color: var(--red); }
+
+  main{ flex:1; overflow-y:auto; padding: 18px 14px 8px; display:flex; flex-direction:column; gap:14px; }
+
+  .empty{ margin:auto; text-align:center; color: var(--ink-soft); font-size:14px; max-width:280px; line-height:1.5; }
+  .empty .mark-big{ width:64px; height:64px; border-radius:16px; margin: 0 auto 14px; display:block; object-fit:cover; }
+
+  .row{ display:flex; width:100%; }
+  .row.user{ justify-content:flex-end; }
+  .row.kate{ justify-content:flex-start; }
+
+  .bubble{
+    max-width: 82%; padding: 11px 15px; border-radius: 14px;
+    font-size:15.5px; line-height:1.48; white-space: pre-wrap; word-wrap: break-word;
+  }
+  .row.user .bubble{ background: var(--bubble-user); color: var(--bubble-user-ink); border-bottom-right-radius:4px; }
+  .row.kate .bubble{
+    background: var(--bubble-kate); border: 1px solid var(--border); color: var(--ink);
+    border-bottom-left-radius:4px; border-left: 2px solid var(--blue);
+  }
+
+  .typing{ display:inline-flex; gap:4px; padding: 4px 2px; }
+  .typing span{ width:6px; height:6px; border-radius:50%; background: var(--blue); opacity:.6; animation: bounce 1.1s infinite ease-in-out; }
+  .typing span:nth-child(2){ animation-delay: .15s; }
+  .typing span:nth-child(3){ animation-delay: .3s; }
+  @keyframes bounce{ 0%,60%,100%{ transform: translateY(0); opacity:.4; } 30%{ transform: translateY(-4px); opacity:1; } }
+
+  form{
+    flex-shrink:0; display:flex; align-items:flex-end; gap:8px;
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border); background: var(--bg);
+  }
+  textarea{
+    flex:1; resize:none; max-height:120px; min-height:42px; border-radius:18px;
+    border:1px solid var(--border); background: var(--bg-panel); color: var(--ink);
+    padding:11px 16px; font-family: -apple-system, "SF Pro Text", sans-serif; font-size:16px; line-height:1.35; outline:none;
+  }
+  textarea:focus{ border-color: var(--blue); }
+
+  button.mic{
+    width:42px; height:42px; border-radius:50%; border: 1px solid var(--border);
+    background: var(--bg-panel); color: var(--blue); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  button.mic.listening{ background: var(--blue); color: var(--white); border-color: var(--blue); animation: pulse 1.2s infinite; }
+  @keyframes pulse{ 0%{ box-shadow: 0 0 0 0 rgba(51,85,224,0.5); } 70%{ box-shadow: 0 0 0 9px rgba(51,85,224,0); } 100%{ box-shadow: 0 0 0 0 rgba(51,85,224,0); } }
+  button.mic svg{ width:17px; height:17px; }
+
+  button.send{
+    width:42px; height:42px; border-radius:50%; border:none; background: var(--red); color: var(--white);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  button.send:disabled{ opacity:.35; }
+  button.send svg{ width:18px; height:18px; }
+
+  .notice{ font-size:11.5px; color: var(--ink-soft); text-align:center; padding: 0 24px 6px; }
+  ::-webkit-scrollbar{ width:0; height:0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img class="mark" src="/icon180.png" alt="kATE">
+    <div>
+      <h1>kATE</h1>
+      <div class="sub" id="statusLine">ÇEVRİMİÇİ</div>
+    </div>
+  </div>
+  <div class="headerActions">
+    <button class="icon-btn" id="proBtn" title="Pro Mod">Pro</button>
+    <button class="icon-btn" id="speakBtn" title="Sesli yanıt">🔊</button>
+    <button class="icon-btn danger" id="clearBtn" title="Sohbeti temizle">Temizle</button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="empty" id="emptyState">
+    <img class="mark-big" src="/icon180.png" alt="kATE">
+    Merhaba, ben kATE.<br>Yazarak ya da mikrofonla konuşabilirsin.
+  </div>
+</main>
+
+<div class="notice" id="offlineNotice" style="display:none"></div>
+
+<form id="chatForm">
+  <button class="mic" type="button" id="micBtn" aria-label="Sesli mesaj" title="Sesle konuş">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+  </button>
+  <textarea id="input" rows="1" placeholder="Mesaj yaz veya mikrofona konuş…" autocomplete="off"></textarea>
+  <button class="send" type="submit" id="sendBtn" aria-label="Gönder">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+  </button>
+</form>
+
+<script>
+(function(){
+  const main = document.getElementById('main');
+  const emptyState = document.getElementById('emptyState');
+  const form = document.getElementById('chatForm');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
+  const micBtn = document.getElementById('micBtn');
+  const speakBtn = document.getElementById('speakBtn');
+  const proBtn = document.getElementById('proBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const offlineNotice = document.getElementById('offlineNotice');
+
+  let messages = JSON.parse(localStorage.getItem('kate_messages') || '[]');
+  let sending = false;
+  let speakEnabled = false;
+  let proMode = false;
+  let recognition = null;
+  let listening = false;
+
+  function autosize(){
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  }
+  input.addEventListener('input', autosize);
+
+  function renderAll(){
+    main.querySelectorAll('.row').forEach(n => n.remove());
+    if(messages.length === 0){ emptyState.style.display = 'block'; }
+    else { emptyState.style.display = 'none'; messages.forEach(m => appendBubble(m.role, m.content, false)); }
+    scrollDown();
+  }
+
+  function appendBubble(role, text, doScroll){
+    emptyState.style.display = 'none';
+    const row = document.createElement('div');
+    row.className = 'row ' + (role === 'user' ? 'user' : 'kate');
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    main.appendChild(row);
+    if(doScroll !== false) scrollDown();
+    return bubble;
+  }
+
+  function typingBubble(){
+    const row = document.createElement('div');
+    row.className = 'row kate';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble typing';
+    bubble.innerHTML = '<span></span><span></span><span></span>';
+    row.appendChild(bubble);
+    main.appendChild(row);
+    scrollDown();
+    return { row, bubble };
+  }
+
+  function scrollDown(){ requestAnimationFrame(() => { main.scrollTop = main.scrollHeight; }); }
+
+  function persist(){
+    try{ localStorage.setItem('kate_messages', JSON.stringify(messages)); }catch(e){}
+  }
+
+  function speak(text){
+    if(!speakEnabled || !('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'tr-TR';
+      const voices = window.speechSynthesis.getVoices();
+      const trVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('tr'));
+      if(trVoice) u.voice = trVoice;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  function setupSpeech(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ micBtn.style.display = 'none'; return; }
+    recognition = new SR();
+    recognition.lang = 'tr-TR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onstart = () => { listening = true; micBtn.classList.add('listening'); };
+    recognition.onend = () => { listening = false; micBtn.classList.remove('listening'); };
+    recognition.onerror = () => { listening = false; micBtn.classList.remove('listening'); };
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      input.value = transcript;
+      autosize();
+      send(transcript);
+    };
+    micBtn.addEventListener('click', () => {
+      if(listening){ recognition.stop(); return; }
+      try{ recognition.start(); }catch(e){}
+    });
+  }
+
+  async function send(text){
+    text = text.trim();
+    if(!text || sending) return;
+
+    messages.push({ role:'user', content:text });
+    appendBubble('user', text);
+    input.value = '';
+    autosize();
+    persist();
+
+    sending = true;
+    sendBtn.disabled = true;
+    const t = typingBubble();
+
+    try{
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages, proMode })
+      });
+
+      if(!res.ok){ throw new Error('request failed'); }
+      const data = await res.json();
+      const finalText = data.text || '...';
+
+      t.bubble.classList.remove('typing');
+      t.bubble.textContent = finalText;
+      messages.push({ role:'assistant', content: finalText });
+      persist();
+      speak(finalText);
+    }catch(err){
+      t.bubble.classList.remove('typing');
+      t.bubble.textContent = 'Sunucuya ulaşılamadı, tekrar dener misin?';
+    }finally{
+      sending = false;
+      sendBtn.disabled = false;
+      scrollDown();
+    }
+  }
+
+  form.addEventListener('submit', (e) => { e.preventDefault(); send(input.value); });
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(input.value); }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if(!confirm('Sohbet geçmişini temizlemek istiyor musun?')) return;
+    messages = [];
+    renderAll();
+    persist();
+  });
+
+  speakBtn.addEventListener('click', () => {
+    speakEnabled = !speakEnabled;
+    speakBtn.classList.toggle('active', speakEnabled);
+    if(!speakEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  });
+
+  proBtn.addEventListener('click', () => {
+    proMode = !proMode;
+    proBtn.classList.toggle('active', proMode);
+  });
+
+  renderAll();
+  setupSpeech();
+})();
+</script>
+
+</body>
+</html>
